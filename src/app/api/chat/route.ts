@@ -17,6 +17,9 @@ type ChatRequestBody = {
 
 const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
 
+const GREETING_REPLY =
+  "Hello! I am your AI Orchestrating Counselor. Tell me what you want to build, and I will help with prompt wording, orchestrator design, and guardrails.";
+
 const textbookToolDefinition: ChatCompletionTool = {
   type: "function",
   function: {
@@ -64,17 +67,24 @@ function isChatMessage(value: unknown): value is ChatMessage {
   );
 }
 
-export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Server is missing OPENAI_API_KEY." },
-      { status: 500 },
-    );
+function getLatestUserMessage(messages: ChatMessage[]): string {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message.role === "user") {
+      return message.content.trim();
+    }
   }
 
-  const openai = new OpenAI({ apiKey });
+  return "";
+}
+
+function isSimpleGreeting(content: string): boolean {
+  const normalized = content.trim().toLowerCase();
+  return /^(hi|hello|hey|yo|sup|good\s+morning|good\s+afternoon|good\s+evening)[!.\s]*$/.test(normalized);
+}
+
+export async function POST(request: Request) {
+  const apiKey = process.env.OPENAI_API_KEY;
 
   try {
     const body = (await request.json()) as ChatRequestBody;
@@ -95,14 +105,28 @@ export async function POST(request: Request) {
       );
     }
 
+    const latestUserMessage = getLatestUserMessage(incomingMessages);
+
+    if (isSimpleGreeting(latestUserMessage)) {
+      return NextResponse.json({ reply: GREETING_REPLY });
+    }
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Server is missing OPENAI_API_KEY." },
+        { status: 500 },
+      );
+    }
+
+    const openai = new OpenAI({ apiKey });
+
     const requestMessages: ChatCompletionMessageParam[] = [
       {
         role: "system",
         content:
           "You are an AI counselor that helps people design AI orchestrators to enhance human skills and preserve human qualities (judgment, empathy, responsibility, creativity, and cooperation). " +
-          "For EVERY user message, you MUST call the findCounselorSources tool. " +
-          "When possible, pass structured arguments: title, author, and query (human-skill and strategy keywords). " +
-          "Never skip the tool call, never guess from memory. " +
+          "Use the findCounselorSources tool when it improves the answer, especially for requests involving reading references, frameworks, strategy, or source-backed guidance. " +
+          "When you call the tool, pass structured arguments when possible: title, author, and query (human-skill and strategy keywords). " +
           "Use tool results as internal grounding by default; do NOT automatically list books, links, or resource catalogs unless the user explicitly asks for sources or reading references. " +
           "If users ask how to AI engineer or what words to say, switch into coaching mode and provide: (1) a reusable prompt formula, (2) copy-paste prompt templates, (3) better wording alternatives, and (4) a short critique of the user's draft prompt. " +
           "Prioritize vocabulary and frameworks from modern orchestration practice: spec to sprint to implementation to QA loops; role, scope, invariants, acceptance criteria, sequencing, verification; policy versus execution boundaries; typed schemas as message-in-a-bottle contracts; deterministic tool execution; inspectable invocation; structured results; talker-to-doer capability progression; composition roots and middleware guardrails. " +
@@ -119,7 +143,7 @@ export async function POST(request: Request) {
       temperature: 0.3,
       messages: requestMessages,
       tools: [textbookToolDefinition],
-      tool_choice: "required",
+      tool_choice: "auto",
     });
 
     const assistantMessage = completion.choices[0]?.message;
@@ -145,11 +169,27 @@ export async function POST(request: Request) {
           author?: string;
         };
 
-        const toolResult = await searchTextbookPDFWithMcp({
-          query: args.query,
-          title: args.title,
-          author: args.author,
-        });
+        let toolResult;
+        try {
+          toolResult = await searchTextbookPDFWithMcp({
+            query: args.query,
+            title: args.title,
+            author: args.author,
+          });
+        } catch (toolError) {
+          const toolMessage =
+            toolError instanceof Error
+              ? toolError.message
+              : "Tool failed unexpectedly.";
+          toolResult = {
+            query: args.query ?? "",
+            title: args.title ?? null,
+            author: args.author ?? null,
+            found: 0,
+            results: [],
+            message: `Source lookup unavailable: ${toolMessage}`,
+          };
+        }
 
         requestMessages.push({
           role: "tool",

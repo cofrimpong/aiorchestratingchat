@@ -11,7 +11,7 @@ type ChatMessage = {
 const initialMessage: ChatMessage = {
   role: "assistant",
   content:
-    "Hello! I am your **AI Orchestrating Counselor**.\n\nBecome the best AI orchestrator while strengthening your human skills, preserving your qualities as a human, boosting your vocabulary and uniqueness!\n\n**You can ask me for:**\n- prompt formulas and copy-paste templates\n- orchestrator blueprints and agent roles\n- guardrails and weekly skill practice loops\n\nWhat are you building right now?",
+    "## AI Orchestrating Counselor\n\nHello! I am your **AI Orchestrating Counselor**.\n\nBecome the best AI orchestrator while strengthening your human skills, preserving your qualities as a human, boosting your vocabulary and uniqueness!\n\n**You can ask me for:**\n- prompt formulas and copy-paste templates\n- orchestrator blueprints and agent roles\n- guardrails and weekly skill practice loops\n\nWhat are you building right now?",
 };
 
 const SUGGESTION_CHIPS = [
@@ -156,9 +156,6 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full border-[2px] border-black bg-cyan-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] sm:text-xs">
             Neo Lab Interface
           </div>
-          <h1 className="mt-2 font-[family:var(--font-display)] text-2xl leading-none tracking-tight text-black sm:text-4xl">
-            AI Orchestrating Counselor
-          </h1>
           <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-zinc-900 sm:text-sm">
             Ask for exact wording, orchestration plans, and prompt rewrites that execute cleanly.
           </p>
