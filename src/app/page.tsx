@@ -11,7 +11,7 @@ type ChatMessage = {
 const initialMessage: ChatMessage = {
   role: "assistant",
   content:
-    "## AI Orchestrating Counselor\n\nHello! I am your **AI Orchestrating Counselor**.\n\nBecome the best AI orchestrator while strengthening your human skills, preserving your qualities as a human, boosting your vocabulary and uniqueness!\n\n**You can ask me for:**\n- prompt formulas and copy-paste templates\n- orchestrator blueprints and agent roles\n- guardrails and weekly skill practice loops\n\nWhat are you building right now?",
+    "Hello! I am your **AI Orchestrating Counselor**.\n\nBecome the best AI orchestrator while strengthening your human skills, preserving your qualities as a human, boosting your vocabulary and uniqueness!\n\n**You can ask me for:**\n- prompt formulas and copy-paste templates\n- orchestrator blueprints and agent roles\n- guardrails and weekly skill practice loops\n\nWhat are you building right now?",
 };
 
 const SUGGESTION_CHIPS = [
@@ -152,42 +152,75 @@ export default function Home() {
       <div className="pointer-events-none absolute bottom-8 left-1/2 -z-10 h-44 w-[20rem] -translate-x-1/2 skew-x-[-14deg] rounded-3xl border-[4px] border-cyan-300/60 bg-cyan-400/10 blur-2xl" />
 
       <section className="relative flex flex-1 flex-col overflow-hidden rounded-[1.75rem] border-[4px] border-black bg-white shadow-[14px_14px_0_#000]">
-        <div className="border-b-[3px] border-black bg-[linear-gradient(135deg,#ffec8a_0%,#ff8bd1_38%,#8ec5ff_100%)] px-4 py-3 sm:px-6">
-          <div className="inline-flex items-center gap-2 rounded-full border-[2px] border-black bg-cyan-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] sm:text-xs">
-            Neo Lab Interface
-          </div>
-          <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-zinc-900 sm:text-sm">
-            Ask for exact wording, orchestration plans, and prompt rewrites that execute cleanly.
-          </p>
-        </div>
-
         <div className={`flex-1 overflow-y-auto bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_70%,#e0f2fe_100%)] px-4 py-4 sm:px-6 sm:py-6 ${isHeroState ? "flex items-center justify-center" : "space-y-4"}`}>
           {messages.map((message, index) => (
-            <article
-              key={`${message.role}-${index}`}
-              className={`max-w-[95%] rounded-[1.2rem] border-[3px] px-4 py-3 text-sm leading-relaxed sm:max-w-[84%] ${
-                message.role === "user"
-                  ? "ml-auto -rotate-[0.8deg] border-black bg-black text-white shadow-[8px_8px_0_#14b8a6]"
-                  : isHeroState
-                    ? "mx-auto rotate-[0.3deg] border-black bg-white text-zinc-900 shadow-[8px_8px_0_#000]"
-                    : "rotate-[0.3deg] border-black bg-white text-zinc-900 shadow-[8px_8px_0_#000]"
-              }`}
-            >
-              <ReactMarkdown
-                components={{
-                  a: ({ node: _node, ...props }) => (
-                    <a
-                      {...props}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline"
-                    />
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </article>
+            (() => {
+              const isHeroMessage = isHeroState && message.role === "assistant" && index === 0;
+
+              if (isHeroMessage) {
+                return (
+                  <article
+                    key={`${message.role}-${index}`}
+                    className="mx-auto w-full max-w-4xl overflow-hidden rounded-[1.2rem] border-[3px] border-black bg-white text-zinc-900 shadow-[8px_8px_0_#000]"
+                  >
+                    <div className="border-b-[3px] border-black bg-[linear-gradient(135deg,#ffec8a_0%,#ff8bd1_38%,#8ec5ff_100%)] px-4 py-4 sm:px-6">
+                      <div className="inline-flex items-center gap-2 rounded-full border-[2px] border-black bg-cyan-200 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] sm:text-xs">
+                        Neo Lab Interface
+                      </div>
+                      <h1 className="mt-2 font-[family:var(--font-display)] text-3xl leading-none tracking-tight text-black sm:text-5xl">
+                        AI Orchestrating Counselor
+                      </h1>
+                      <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-zinc-900 sm:text-sm">
+                        Ask for exact wording, orchestration plans, and prompt rewrites that execute cleanly.
+                      </p>
+                    </div>
+
+                    <div className="px-4 py-4 text-base leading-relaxed sm:px-6">
+                      <ReactMarkdown
+                        components={{
+                          a: ({ node: _node, ...props }) => (
+                            <a
+                              {...props}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            />
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  </article>
+                );
+              }
+
+              return (
+                <article
+                  key={`${message.role}-${index}`}
+                  className={`max-w-[95%] rounded-[1.2rem] border-[3px] px-4 py-3 text-sm leading-relaxed sm:max-w-[84%] ${
+                    message.role === "user"
+                      ? "ml-auto -rotate-[0.8deg] border-black bg-black text-white shadow-[8px_8px_0_#14b8a6]"
+                      : "rotate-[0.3deg] border-black bg-white text-zinc-900 shadow-[8px_8px_0_#000]"
+                  }`}
+                >
+                  <ReactMarkdown
+                    components={{
+                      a: ({ node: _node, ...props }) => (
+                        <a
+                          {...props}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                        />
+                      ),
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                </article>
+              );
+            })()
           ))}
 
           {isLoading && (
